@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradeCloud — Connecting Brands. Distributing Growth.</title>
+<meta name="description" content="TradeCloud builds a direct bridge between brands and distributors — cutting out the middleman and putting more margin in your pocket, backed by live inventory, sales tracking, and in-app ordering.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ink: #0B1A3A;
+    --ink-mid: #1a2d5a;
+    --ink-soft: #5B6479;
+    --accent: #1F4FE0;
+    --accent-bright: #3D63E8;
+    --accent-glow: rgba(31,79,224,0.35);
+    --accent-dim: rgba(31,79,224,0.12);
+    --paper: #FFFFFF;
+    --mist: #F4F6FC;
+    --line: #DEE3F2;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: auto; }
+
+  body {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    background: var(--ink);
+    color: var(--paper);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── CANVAS LAYER ── */
+  #canvas-container {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  #three-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* ── SCROLL DRIVER ── */
+  #scroll-driver {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── NAV ── */
+  header.nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 18px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(11,26,58,0.72);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    transition: background 0.4s ease;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+  .brand-icon {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.03em;
+    flex-shrink: 0;
+    box-shadow: 0 0 18px var(--accent-glow);
+  }
+  .brand-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--paper);
+    letter-spacing: -0.02em;
+  }
+  .brand-name span { color: var(--accent-bright); }
+
+  nav.links {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+  nav.links a {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+    transition: color 0.2s;
+    letter-spacing: 0.01em;
+  }
+  nav.links a:hover { color: var(--paper); }
+
+  .btn-nav {
+    padding: 9px 20px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    box-shadow: 0 4px 18px var(--accent-glow);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-nav:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px var(--accent-glow);
+  }
+
+  /* ── SECTION BLOCKS ── */
+  .section-block {
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px 48px 80px;
+  }
+
+  /* ── HERO ── */
+  .hero-block {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 48px 80px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-bright);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    width: 24px; height: 1px;
+    background: var(--accent-bright);
+  }
+
+  .hero h1 {
+    font-size: clamp(44px, 6.5vw, 88px);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    max-width: 780px;
+    color: var(--paper);
+    margin-bottom: 24px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--accent-bright);
+  }
+
+  .hero-sub {
+    font-size: clamp(15px, 1.6vw, 18px);
+    color: rgba(255,255,255,0.55);
+    max-width: 560px;
+    line-height: 1.65;
+    margin-bottom: 40px;
+    font-weight: 400;
+  }
+
+  .hero-ctas {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    padding: 14px 28px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 6px 24px var(--accent-glow);
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.01em;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 32px rgba(31,79,224,0.45);
+  }
+  .btn-ghost {
+    padding: 14px 28px;
+    background: transparent;
+    color: rgba(255,255,255,0.7);
+    font-size: 15px;
+    font-weight: 500;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 999px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: border-color 0.2s, color 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .btn-ghost:hover {
+    border-color: var(--accent-bright);
+    color: var(--accent-bright);
+  }
+
+  /* ── STAT STRIP ── */
+  .stat-strip {
+    display: flex;
+    gap: 0;
+    margin-top: 64px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 32px;
+    flex-wrap: wrap;
+  }
+  .stat {
+    flex: 1 1 160px;
+    padding: 0 24px 0 0;
+  }
+  .stat:not(:first-child) {
+    padding-left: 24px;
+    border-left: 1px solid rgba(255,255,255,0.08);
+  }
+  .stat-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--paper);
+    letter-spacing: -0.03em;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+    letter-spacing: 0.03em;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── SCROLL HINT ── */
+  .scroll-hint {
+    position: absolute;
+    bottom: 36px;
+    right: 48px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.3);
+    animation: scrollpulse 2.4s ease-in-out infinite;
+  }
+  .scroll-arrow {
+    width: 24px; height: 24px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  @keyframes scrollpulse {
+    0%, 100% { opacity: 0.4; transform: translateY(0); }
+    50% { opacity: 0.9; transform: translateY(4px); }
+  }
+
+  /* ── SECTION LABELS ── */
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-bright);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::before {
+    content: '';
+    width: 24px; height: 1px;
+    background: var(--accent-bright);
+  }
+
+  /* ── ABOUT SECTION ── */
+  .about-section {
+    background: linear-gradient(180deg, transparent 0%, rgba(11,26,58,0.92) 15%, rgba(11,26,58,0.92) 85%, transparent 100%);
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  .about-copy h2 {
+    font-size: clamp(28px, 3.5vw, 44px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    margin-bottom: 20px;
+    margin-top: 12px;
+    color: var(--paper);
+  }
+
+  .about-copy p {
+    font-size: 16px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.7;
+    margin-bottom: 16px;
+    font-weight: 400;
+  }
+  .about-copy p strong {
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+  }
+
+  /* ── FEATURE GRID ── */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .feature-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 24px 22px;
+    cursor: default;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  }
+  .feature-card:hover {
+    background: rgba(31,79,224,0.08);
+    border-color: rgba(31,79,224,0.3);
+    transform: translateY(-3px);
+  }
+  .feature-index {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-bright);
+    margin-bottom: 14px;
+    opacity: 0.8;
+  }
+  .feature-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--paper);
+    letter-spacing: -0.01em;
+  }
+  .feature-card p {
+    font-size: 13.5px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.6;
+  }
+
+  /* ── PIPELINE SECTION ── */
+  .pipeline-section {
+    background: linear-gradient(180deg, transparent 0%, rgba(11,26,58,0.88) 20%, rgba(11,26,58,0.88) 80%, transparent 100%);
+  }
+
+  .pipeline-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .pipeline-inner h2 {
+    font-size: clamp(28px, 3.5vw, 44px);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    margin-bottom: 16px;
+    margin-top: 12px;
+    color: var(--paper);
+  }
+  .pipeline-inner p {
+    font-size: 16px;
+    color: rgba(255,255,255,0.5);
+    max-width: 540px;
+    margin: 0 auto 48px;
+    line-height: 1.65;
+  }
+
+  .pipeline-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+  .pipeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    flex: 1 1 160px;
+    min-width: 140px;
+  }
+  .step-dot {
+    width: 64px; height: 64px;
+    background: rgba(31,79,224,0.12);
+    border: 1px solid rgba(31,79,224,0.3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+    position: relative;
+    z-index: 1;
+  }
+  .pipeline-step:hover .step-dot {
+    background: rgba(31,79,224,0.25);
+    border-color: var(--accent-bright);
+    box-shadow: 0 0 28px var(--accent-glow);
+  }
+  .step-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+    text-align: center;
+    letter-spacing: -0.01em;
+  }
+  .step-sub {
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.35);
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.02em;
+    margin-top: -8px;
+  }
+  .pipeline-arrow {
+    font-size: 18px;
+    color: rgba(31,79,224,0.4);
+    flex-shrink: 0;
+    padding: 0 4px;
+    margin-bottom: 36px;
+  }
+
+  /* ── CONTACT SECTION ── */
+  .contact-section {
+    background: linear-gradient(180deg, transparent 0%, rgba(11,26,58,0.92) 20%, rgba(11,26,58,0.92) 80%, transparent 100%);
+  }
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 64px;
+    align-items: center;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  .contact-copy h2 {
+    font-size: clamp(28px, 3.5vw, 44px);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    margin-bottom: 16px;
+    margin-top: 12px;
+    color: var(--paper);
+  }
+  .contact-copy p {
+    font-size: 16px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.7;
+    max-width: 440px;
+  }
+  .contact-list {
+    margin-top: 28px;
+    display: grid;
+    gap: 10px;
+  }
+  .contact-list .row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.5;
+  }
+  .row-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-bright);
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+
+  /* ── MAIL CARD ── */
+  .mail-card {
+    background: var(--accent);
+    border-radius: 20px;
+    padding: 40px 34px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(31,79,224,0.35);
+  }
+  .mail-card::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%);
+  }
+  .mail-card::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.07), transparent 70%);
+  }
+  .mail-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  .mail-addr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(16px, 2.2vw, 20px);
+    font-weight: 500;
+    color: #fff;
+    word-break: break-all;
+    line-height: 1.35;
+    position: relative;
+    z-index: 1;
+  }
+  .mail-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+  }
+  .mail-btn-white {
+    padding: 11px 20px;
+    background: #fff;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.01em;
+  }
+  .mail-btn-white:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  }
+  .mail-btn-outline {
+    padding: 11px 20px;
+    background: transparent;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 999px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: border-color 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .mail-btn-outline:hover { border-color: rgba(255,255,255,0.7); }
+  .copy-note {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 14px;
+    position: relative;
+    z-index: 1;
+    min-height: 16px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative;
+    z-index: 10;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 36px 48px;
+    background: rgba(11,26,58,0.95);
+  }
+  .footer-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .footer-brand .name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--paper);
+    letter-spacing: -0.02em;
+  }
+  .footer-brand .tagline {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .footer-meta {
+    display: flex;
+    gap: 20px;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.35);
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .footer-meta a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-meta a:hover { color: var(--accent-bright); }
+
+  /* ── MOUSE PARALLAX OVERLAY ── */
+  #parallax-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .about-grid, .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+    header.nav { padding: 16px 24px; }
+    .hero-block { padding: 0 24px 64px; }
+    .section-block { padding: 100px 24px 60px; }
+    .stat-strip { gap: 16px; }
+    nav.links a:not(:last-child) { display: none; }
+    footer { padding: 28px 24px; }
+    .pipeline-steps { gap: 8px; }
+  }
+  @media (max-width: 560px) {
+    .feature-grid { grid-template-columns: 1fr; }
+    .pipeline-arrow { display: none; }
+  }
+
+  /* ── SCROLL PROGRESS ── */
+  #scroll-progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--accent-bright);
+    z-index: 200;
+    width: 0%;
+    transition: width 0.05s linear;
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+
+  /* ── SECTION FADE ANIMATIONS ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<!-- scroll progress bar -->
+<div id="scroll-progress"></div>
+
+<!-- Three.js canvas -->
+<div id="canvas-container">
+  <canvas id="three-canvas"></canvas>
+</div>
+
+<!-- Sticky Nav -->
+<header class="nav" id="nav">
+  <a class="brand" href="#">
+    <div class="brand-icon">TC</div>
+    <span class="brand-name">Trade<span>Cloud</span></span>
+  </a>
+  <nav class="links">
+    <a href="#about">About</a>
+    <a href="#pipeline">How it Works</a>
+    <a href="#contact">Contact</a>
+    <a href="#contact" class="btn-nav">Get Early Access</a>
+  </nav>
+</header>
+
+<!-- Scroll driver / content -->
+<div id="scroll-driver">
+
+  <!-- HERO -->
+  <section class="hero-block" id="hero">
+    <div class="hero-eyebrow">Trade Infrastructure · B2B Platform</div>
+    <h1 class="hero-title">Cut the middleman.<br><em>Keep the margin.</em></h1>
+    <p class="hero-sub">TradeCloud builds a direct bridge between brands and distributors — live inventory, real-time sales tracking, and in-app ordering. One platform, zero friction.</p>
+    <div class="hero-ctas">
+      <a href="#contact" class="btn-primary">Request Early Access →</a>
+      <a href="#about" class="btn-ghost">See How It Works</a>
+    </div>
+    <div class="stat-strip reveal">
+      <div class="stat">
+        <div class="stat-num">0%</div>
+        <div class="stat-label">Middleman Cut</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">Real-time</div>
+        <div class="stat-label">Inventory Sync</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">In-app</div>
+        <div class="stat-label">Ordering & Payments</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">Live</div>
+        <div class="stat-label">Sales Analytics</div>
+      </div>
+    </div>
+    <div class="scroll-hint">
+      <div class="scroll-arrow">↓</div>
+      SCROLL TO EXPLORE
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="section-block about-section" id="about">
+    <div class="about-grid">
+      <div class="about-copy reveal">
+        <div class="section-label">About TradeCloud</div>
+        <h2>The supply chain is broken. We fixed it.</h2>
+        <p>Traditional distribution adds layer after layer of markup — brokers, wholesalers, regional reps — until your margin is a ghost. <strong>TradeCloud eliminates every unnecessary step</strong>, connecting the brand directly with the distributor and letting both sides win.</p>
+        <p>We're building for the brands that are done with opaque pricing, slow reordering, and zero visibility into where their product actually goes. With TradeCloud, you see everything — in real time.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card reveal">
+          <div class="feature-index">F 01</div>
+          <h3>Live Inventory</h3>
+          <p>Every SKU, every warehouse, every distributor — updated in real time. No more spreadsheet reconciliation.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-index">F 02</div>
+          <h3>Direct Ordering</h3>
+          <p>Distributors reorder inside the app. Brands approve, fulfill, and ship — no phone tag, no lost emails.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-index">F 03</div>
+          <h3>Sales Tracking</h3>
+          <p>See exactly what's selling, where, and at what velocity. Make sourcing decisions on data, not guesswork.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-index">F 04</div>
+          <h3>Margin Protection</h3>
+          <p>Agreed pricing is locked in the platform. Both sides see the same numbers. No surprise deductions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PIPELINE / HOW IT WORKS -->
+  <section class="section-block pipeline-section" id="pipeline">
+    <div class="pipeline-inner">
+      <div class="section-label" style="justify-content:center">How It Works</div>
+      <h2 class="reveal">From raw goods to retail shelf — without the noise.</h2>
+      <p class="reveal">TradeCloud models your supply chain as a live, auditable pipeline. Every handoff is tracked. Every SKU is accounted for.</p>
+      <div class="pipeline-steps reveal">
+        <div class="pipeline-step">
+          <div class="step-dot">🏭</div>
+          <div class="step-label">Brand lists product</div>
+          <div class="step-sub">SKU · Pricing · MOQ</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-dot">📦</div>
+          <div class="step-label">Distributor discovers</div>
+          <div class="step-sub">Browse · Shortlist · Enquire</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-dot">🤝</div>
+          <div class="step-label">Deal locked in-app</div>
+          <div class="step-sub">Contract · Pricing · Terms</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-dot">🚚</div>
+          <div class="step-label">Order & fulfill</div>
+          <div class="step-sub">PO · Dispatch · Track</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-dot">📊</div>
+          <div class="step-label">Both sides profit</div>
+          <div class="step-sub">Analytics · Reorder · Scale</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="section-block contact-section" id="contact">
+    <div class="contact-grid">
+      <div class="contact-copy">
+        <div class="section-label reveal">Get in Touch</div>
+        <h2 class="reveal">Ready to reclaim your margin?</h2>
+        <p class="reveal">TradeCloud is in early access. Reach out and we'll walk you through how we fit into your existing operations — no slide deck, just a real conversation.</p>
+        <div class="contact-list reveal">
+          <div class="row"><div class="row-dot"></div> Brands looking to cut distributor overhead</div>
+          <div class="row"><div class="row-dot"></div> Distributors seeking direct brand relationships</div>
+          <div class="row"><div class="row-dot"></div> Investors interested in B2B trade infrastructure</div>
+        </div>
+      </div>
+      <div class="mail-card reveal">
+        <div class="mail-tag">Direct Line</div>
+        <div class="mail-addr">tradecloud.in@gmail.com</div>
+        <div class="mail-actions">
+          <button class="mail-btn-white" id="copyBtn">Copy Email</button>
+          <a href="mailto:tradecloud.in@gmail.com" class="mail-btn-outline">Open in Mail →</a>
+        </div>
+        <div class="copy-note" id="copyNote"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="brand-icon" style="width:28px;height:28px;font-size:11px">TC</div>
+        <div>
+          <div class="name">TradeCloud</div>
+          <div class="tagline">Connecting brands. Distributing growth.</div>
+        </div>
+      </div>
+      <div class="footer-meta">
+        <a href="#about">About Us</a>
+        <a href="#contact">Contact Us</a>
+        <a href="mailto:tradecloud.in@gmail.com">tradecloud.in@gmail.com</a>
+        <span>© <span id="year"></span> TradeCloud</span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- THREE.JS + LENIS + POSTPROCESSING via CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ─────────────────────────────────────────────────────
+//  TradeCloud 3D Factory Floor — Three.js r128 + Lenis
+// ─────────────────────────────────────────────────────
+
+// ── LENIS SMOOTH SCROLL (lightweight vanilla implementation) ──
+class LenisScroll {
+  constructor() {
+    this.currentY = 0;
+    this.targetY = 0;
+    this.ease = 0.09;
+    this.isRunning = false;
+    this.raf = null;
+    this.listeners = [];
+    this._onWheel = this._onWheel.bind(this);
+    this._onTouchStart = this._onTouchStart.bind(this);
+    this._onTouchMove = this._onTouchMove.bind(this);
+    this.touchStartY = 0;
+    window.addEventListener('wheel', this._onWheel, { passive: false });
+    window.addEventListener('touchstart', this._onTouchStart, { passive: true });
+    window.addEventListener('touchmove', this._onTouchMove, { passive: false });
+  }
+  get maxScroll() {
+    return document.documentElement.scrollHeight - window.innerHeight;
+  }
+  _onWheel(e) {
+    e.preventDefault();
+    this.targetY = Math.max(0, Math.min(this.maxScroll, this.targetY + e.deltaY * 1.1));
+    if (!this.isRunning) this._start();
+  }
+  _onTouchStart(e) { this.touchStartY = e.touches[0].clientY; }
+  _onTouchMove(e) {
+    e.preventDefault();
+    const dy = this.touchStartY - e.touches[0].clientY;
+    this.touchStartY = e.touches[0].clientY;
+    this.targetY = Math.max(0, Math.min(this.maxScroll, this.targetY + dy * 1.5));
+    if (!this.isRunning) this._start();
+  }
+  _start() {
+    this.isRunning = true;
+    this._tick();
+  }
+  _tick() {
+    const diff = this.targetY - this.currentY;
+    if (Math.abs(diff) < 0.4) {
+      this.currentY = this.targetY;
+      this.isRunning = false;
+      this._emit();
+      return;
+    }
+    this.currentY += diff * this.ease;
+    this._emit();
+    this.raf = requestAnimationFrame(() => this._tick());
+  }
+  _emit() {
+    const progress = this.currentY / Math.max(1, this.maxScroll);
+    this.listeners.forEach(fn => fn(this.currentY, progress));
+    // sync native scroll for anchor links / accessibility
+    window.scrollTo(0, this.currentY);
+  }
+  on(fn) { this.listeners.push(fn); }
+  scrollTo(target) {
+    this.targetY = Math.max(0, Math.min(this.maxScroll, target));
+    if (!this.isRunning) this._start();
+  }
+}
+
+const lenis = new LenisScroll();
+
+// ── SCROLL PROGRESS BAR ──
+const progressBar = document.getElementById('scroll-progress');
+lenis.on((y, p) => {
+  progressBar.style.width = (p * 100) + '%';
+});
+
+// ── THREE.JS SETUP ──
+const canvas = document.getElementById('three-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.85;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0B1A3A, 0.048);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 2.2, 14);
+camera.lookAt(0, 1.5, 0);
+
+// ── MOUSE TRACKING ──
+const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
+document.addEventListener('mousemove', e => {
+  mouse.targetX = (e.clientX / window.innerWidth - 0.5) * 2;
+  mouse.targetY = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+// ── CAMERA PATH ──
+// The camera travels from "raw material" zone (back) → mid factory → shipping dock (front)
+const camPath = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(0, 2.8, 16),    // hero — looking at factory from outside
+  new THREE.Vector3(-1.5, 2.2, 8),  // entering — about section
+  new THREE.Vector3(0, 1.8, 2),     // inside factory — pipeline section
+  new THREE.Vector3(2, 2.0, -4),    // shipping side — contact section
+  new THREE.Vector3(0, 3.0, -10),   // end — footer view
+]);
+
+const camTargetPath = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(0, 1.5, 0),
+  new THREE.Vector3(0, 1.2, 0),
+  new THREE.Vector3(0, 1.0, -4),
+  new THREE.Vector3(0, 1.0, -8),
+  new THREE.Vector3(0, 2.0, -14),
+]);
+
+// ── LIGHTS ──
+const ambientLight = new THREE.AmbientLight(0x1a2a5e, 0.6);
+scene.add(ambientLight);
+
+// Main factory spotlights (blue-tinted)
+const spotPositions = [
+  [-4, 8, 4],
+  [0, 8, 0],
+  [4, 8, -4],
+  [-2, 6, -8],
+  [3, 7, -12],
+];
+const spots = [];
+spotPositions.forEach(([x, y, z], i) => {
+  const spot = new THREE.SpotLight(i % 2 === 0 ? 0x3D63E8 : 0x1F4FE0, 3.5);
+  spot.position.set(x, y, z);
+  spot.angle = Math.PI / 7;
+  spot.penumbra = 0.6;
+  spot.decay = 1.5;
+  spot.distance = 28;
+  spot.castShadow = true;
+  spot.target.position.set(x * 0.3, 0, z * 0.8);
+  scene.add(spot);
+  scene.add(spot.target);
+  spots.push(spot);
+});
+
+// Accent point light
+const accentLight = new THREE.PointLight(0x3D63E8, 2.5, 20);
+accentLight.position.set(0, 4, 2);
+scene.add(accentLight);
+
+// ── FLOOR ──
+const floorGeo = new THREE.PlaneGeometry(60, 80);
+const floorMat = new THREE.MeshStandardMaterial({
+  color: 0x0d1f45,
+  roughness: 0.9,
+  metalness: 0.05,
+});
+const floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -0.5;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// Grid lines on floor
+const gridHelper = new THREE.GridHelper(80, 40, 0x1F4FE0, 0x0e2050);
+gridHelper.position.y = -0.48;
+gridHelper.material.opacity = 0.25;
+gridHelper.material.transparent = true;
+scene.add(gridHelper);
+
+// ── UTILITY: BOX FACTORY ──
+function makeBox(w, h, d, color, roughness = 0.7, metalness = 0.15) {
+  const geo = new THREE.BoxGeometry(w, h, d);
+  const mat = new THREE.MeshStandardMaterial({ color, roughness, metalness });
+  return new THREE.Mesh(geo, mat);
+}
+
+function makeCrate(x, y, z, scale = 1, colorHex = 0x1a3060) {
+  const group = new THREE.Group();
+  const body = makeBox(1.2 * scale, 1.2 * scale, 1.2 * scale, colorHex, 0.85, 0.05);
+  body.castShadow = true; body.receiveShadow = true;
+  group.add(body);
+
+  // straps / lines
+  const strapMat = new THREE.MeshStandardMaterial({ color: 0x3D63E8, roughness: 0.5, metalness: 0.3, emissive: 0x1F4FE0, emissiveIntensity: 0.2 });
+  const s1 = new THREE.Mesh(new THREE.BoxGeometry(1.22 * scale, 0.06 * scale, 1.22 * scale), strapMat);
+  const s2 = new THREE.Mesh(new THREE.BoxGeometry(0.06 * scale, 1.22 * scale, 1.22 * scale), strapMat);
+  group.add(s1, s2);
+
+  group.position.set(x, y, z);
+  group.rotation.y = Math.random() * 0.6 - 0.3;
+  scene.add(group);
+  return group;
+}
+
+// ── FACTORY OBJECTS ──
+const crates = [];
+const crateData = [
+  // raw material zone (z=8 to z=4)
+  [-3, 0.1, 8], [-2.2, 1.4, 7.8], [-1.5, 0.1, 7.2],
+  [3, 0.1, 8], [2.3, 1.4, 8.2], [1.6, 0.1, 7],
+  // processing zone (z=2 to z=-2)
+  [-4, 0.1, 2], [-3, 1.4, 1.5], [-4.5, 0.1, 0],
+  [4, 0.1, 2], [3.2, 1.4, 1.8],
+  // shipping zone (z=-4 to z=-10)
+  [-2, 0.1, -5], [-1, 1.4, -5.5], [-2.5, 0.1, -7],
+  [2.5, 0.1, -5], [1.8, 1.4, -5.8], [2, 0.1, -8],
+  // far dock
+  [-3, 0.1, -11], [0, 0.1, -12], [3, 0.1, -11],
+];
+crateData.forEach(([x, y, z]) => {
+  const c = makeCrate(x, y + 0.6, z, 0.8 + Math.random() * 0.5,
+    Math.random() > 0.5 ? 0x0d2040 : 0x1a3060);
+  crates.push(c);
+});
+
+// ── CONVEYOR BELT ──
+const beltMat = new THREE.MeshStandardMaterial({ color: 0x0a1830, roughness: 0.9, metalness: 0.3 });
+const beltGeo = new THREE.BoxGeometry(1.8, 0.14, 22);
+const belt = new THREE.Mesh(beltGeo, beltMat);
+belt.position.set(0, 0.07, -1);
+belt.castShadow = true; belt.receiveShadow = true;
+scene.add(belt);
+
+// belt rollers
+for (let i = -10; i <= 10; i++) {
+  const rollerGeo = new THREE.CylinderGeometry(0.09, 0.09, 1.85, 8);
+  const rollerMat = new THREE.MeshStandardMaterial({ color: 0x1F4FE0, metalness: 0.7, roughness: 0.3 });
+  const roller = new THREE.Mesh(rollerGeo, rollerMat);
+  roller.rotation.z = Math.PI / 2;
+  roller.position.set(0, 0.14, i * 1.05 - 1);
+  scene.add(roller);
+}
+
+// ── CONVEYOR PARTICLES ──
+const particleCount = 180;
+const particleGeo = new THREE.BufferGeometry();
+const pPositions = new Float32Array(particleCount * 3);
+const pSpeeds = [];
+
+for (let i = 0; i < particleCount; i++) {
+  pPositions[i * 3]     = (Math.random() - 0.5) * 1.6;
+  pPositions[i * 3 + 1] = 0.18 + Math.random() * 0.05;
+  pPositions[i * 3 + 2] = Math.random() * 22 - 11;
+  pSpeeds.push(0.02 + Math.random() * 0.03);
+}
+particleGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+const particleMat = new THREE.PointsMaterial({
+  color: 0x3D63E8,
+  size: 0.08,
+  transparent: true,
+  opacity: 0.7,
+  sizeAttenuation: true,
+});
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
+
+// ── WAREHOUSE WALLS/COLUMNS ──
+const colMat = new THREE.MeshStandardMaterial({ color: 0x0d1f45, roughness: 0.85, metalness: 0.2 });
+const colPositions = [[-6, 0, 8], [6, 0, 8], [-6, 0, -2], [6, 0, -2], [-6, 0, -12], [6, 0, -12]];
+colPositions.forEach(([x, y, z]) => {
+  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 10, 8), colMat);
+  col.position.set(x, 4.5, z);
+  col.castShadow = true;
+  scene.add(col);
+
+  // accent ring
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.04, 8, 16), new THREE.MeshStandardMaterial({
+    color: 0x1F4FE0, emissive: 0x1F4FE0, emissiveIntensity: 0.5, roughness: 0.3, metalness: 0.6
+  }));
+  ring.position.set(x, 2.5, z);
+  ring.rotation.x = Math.PI / 2;
+  scene.add(ring);
+});
+
+// ── FLOATING DATA PANEL (holographic) ──
+function makeHoloPanel(x, y, z, rotY = 0) {
+  const group = new THREE.Group();
+  const frame = new THREE.Mesh(
+    new THREE.BoxGeometry(2.4, 1.6, 0.04),
+    new THREE.MeshStandardMaterial({
+      color: 0x1F4FE0, roughness: 0.1, metalness: 0.8,
+      transparent: true, opacity: 0.15,
+    })
+  );
+  group.add(frame);
+
+  // glow border
+  const border = new THREE.Mesh(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(2.4, 1.6, 0.04)),
+    new THREE.LineBasicMaterial({ color: 0x3D63E8, linewidth: 1 })
+  );
+  group.add(border);
+
+  // data lines
+  for (let i = 0; i < 5; i++) {
+    const lineGeo = new THREE.BoxGeometry(1.2 + Math.random() * 0.8, 0.06, 0.01);
+    const lineMat = new THREE.MeshStandardMaterial({ color: 0x3D63E8, emissive: 0x3D63E8, emissiveIntensity: 0.8 });
+    const line = new THREE.Mesh(lineGeo, lineMat);
+    line.position.set(-0.2, 0.5 - i * 0.28, 0.03);
+    group.add(line);
+  }
+
+  group.position.set(x, y, z);
+  group.rotation.y = rotY;
+  scene.add(group);
+  return group;
+}
+
+const panelA = makeHoloPanel(-5, 3.5, 2, 0.4);
+const panelB = makeHoloPanel(5, 3.2, -4, -0.4);
+const panelC = makeHoloPanel(-4.5, 3.0, -9, 0.3);
+
+// ── MOVING PACKAGES ON BELT ──
+function makeBeltPackage() {
+  const g = makeBox(0.5, 0.35, 0.5, 0x1a3060, 0.8, 0.1);
+  g.castShadow = true;
+  const accent = new THREE.Mesh(
+    new THREE.BoxGeometry(0.52, 0.04, 0.52),
+    new THREE.MeshStandardMaterial({ color: 0x3D63E8, emissive: 0x1F4FE0, emissiveIntensity: 0.4 })
+  );
+  const group = new THREE.Group();
+  group.add(g, accent);
+  group.position.set((Math.random() - 0.5) * 1.2, 0.2, Math.random() * 22 - 11);
+  scene.add(group);
+  return group;
+}
+
+const beltPackages = Array.from({ length: 8 }, makeBeltPackage);
+
+// ── DOF EMULATION via VIGNETTE CANVAS OVERLAY ──
+// (WebGL DOF post-processing requires render targets; we emulate with CSS + per-scroll CSS blur)
+const dofOverlay = document.createElement('canvas');
+dofOverlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2;width:100%;height:100%;';
+document.body.appendChild(dofOverlay);
+
+function updateDOFOverlay() {
+  const ctx = dofOverlay.getContext('2d');
+  dofOverlay.width = window.innerWidth;
+  dofOverlay.height = window.innerHeight;
+
+  const w = dofOverlay.width, h = dofOverlay.height;
+  const cx = w / 2, cy = h / 2;
+  const r = Math.max(w, h) * 0.55;
+
+  const grad = ctx.createRadialGradient(cx, cy, r * 0.35, cx, cy, r);
+  grad.addColorStop(0, 'rgba(11,26,58,0)');
+  grad.addColorStop(0.75, 'rgba(11,26,58,0.08)');
+  grad.addColorStop(1, 'rgba(11,26,58,0.65)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+}
+updateDOFOverlay();
+
+// ── SCROLL-DRIVEN EFFECTS ──
+let scrollProgress = 0;
+
+lenis.on((y, p) => {
+  scrollProgress = p;
+});
+
+// ── REVEAL OBSERVER ──
+const revealEls = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      revealObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.15 });
+revealEls.forEach(el => revealObserver.observe(el));
+
+// ── ANCHOR LINK INTERCEPTION ──
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) {
+      lenis.scrollTo(target.offsetTop - 80);
+    }
+  });
+});
+
+// ── EMAIL COPY ──
+const copyBtn = document.getElementById('copyBtn');
+const copyNote = document.getElementById('copyNote');
+copyBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText('tradecloud.in@gmail.com');
+    copyNote.textContent = '✓ Copied to clipboard';
+  } catch {
+    copyNote.textContent = 'tradecloud.in@gmail.com';
+  }
+  setTimeout(() => { copyNote.textContent = ''; }, 2500);
+});
+
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// ── CLOCK ──
+const clock = new THREE.Clock();
+
+// ── DOF BLUR: renderer canvas blur based on scroll ──
+// Objects far from focal plane get blurred — approximated per scroll region
+function getSceneFocusBlur(progress) {
+  // near 0 (hero): focus on entrance, moderate blur on far
+  // mid (0.3–0.6): in factory, sharp
+  // far (0.7+): focus on dock, slight blur on foreground
+  const cycle = Math.sin(progress * Math.PI * 1.5) * 0.5 + 0.5;
+  return cycle * 0.8; // 0–0.8px blur on the canvas
+}
+
+// ── ANIMATION LOOP ──
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  const p = scrollProgress;
+
+  // Smooth mouse
+  mouse.x += (mouse.targetX - mouse.x) * 0.06;
+  mouse.y += (mouse.targetY - mouse.y) * 0.06;
+
+  // Camera follow path
+  const camPos = camPath.getPointAt(Math.min(p, 1));
+  const camTarget = camTargetPath.getPointAt(Math.min(p, 1));
+  camera.position.lerp(camPos, 0.035);
+
+  // Mouse parallax offset on camera
+  camera.position.x += mouse.x * 0.6;
+  camera.position.y += mouse.y * 0.3;
+
+  const camLook = new THREE.Vector3();
+  camLook.lerp(camTarget, 0.035);
+  camera.lookAt(camTarget.x + mouse.x * 0.4, camTarget.y - mouse.y * 0.2, camTarget.z);
+
+  // Subtle camera tilt with mouse
+  camera.rotation.z = mouse.x * -0.012;
+
+  // Fog density reacts to scroll depth
+  scene.fog.density = 0.038 + Math.sin(p * Math.PI) * 0.022;
+
+  // DOF canvas blur (simulated)
+  const blurAmt = getSceneFocusBlur(p);
+  canvas.style.filter = `blur(${blurAmt.toFixed(2)}px)`;
+
+  // Animate conveyor particles
+  const pos = particleGeo.attributes.position;
+  for (let i = 0; i < particleCount; i++) {
+    pos.array[i * 3 + 2] -= pSpeeds[i];
+    if (pos.array[i * 3 + 2] < -11) {
+      pos.array[i * 3 + 2] = 11;
+      pos.array[i * 3] = (Math.random() - 0.5) * 1.6;
+    }
+  }
+  pos.needsUpdate = true;
+
+  // Animate belt packages
+  beltPackages.forEach((pkg, i) => {
+    pkg.position.z -= 0.025 + i * 0.002;
+    if (pkg.position.z < -11) pkg.position.z = 11;
+    pkg.rotation.y = Math.sin(t * 0.3 + i) * 0.05;
+  });
+
+  // Float crates slightly
+  crates.forEach((crate, i) => {
+    crate.position.y += Math.sin(t * 0.4 + i * 0.7) * 0.001;
+    crate.rotation.y += 0.0003;
+  });
+
+  // Float holographic panels
+  [panelA, panelB, panelC].forEach((p, i) => {
+    p.position.y += Math.sin(t * 0.5 + i * 1.5) * 0.003;
+    p.children.forEach((child, ci) => {
+      if (ci > 1) { // data lines
+        child.scale.x = 0.7 + Math.sin(t * 1.2 + ci * 0.9) * 0.3;
+      }
+    });
+  });
+
+  // Pulse accent light
+  accentLight.intensity = 2.2 + Math.sin(t * 1.8) * 0.5;
+  accentLight.position.x = Math.sin(t * 0.3) * 2;
+
+  // Rotate spot targets slightly
+  spots.forEach((spot, i) => {
+    spot.intensity = 3.2 + Math.sin(t * 0.5 + i) * 0.4;
+  });
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// ── RESIZE ──
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  updateDOFOverlay();
+});
+
+// ── PREFERS-REDUCED-MOTION ──
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  canvas.style.filter = '';
+}
+</script>
+</body>
+</html>
